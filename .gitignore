@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+*.vo
+*.vos
+*.vok
+*.glob
+*.aux
+.metarocq-src/
