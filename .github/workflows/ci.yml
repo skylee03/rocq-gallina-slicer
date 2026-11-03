@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  unit:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -p 'test_unit.py' -v
+
+  metarocq:
+    name: Rocq 9.3 + MetaRocq integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up OCaml/opam
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.4.1"
+          dune-cache: true
+
+      - name: Add Rocq opam repositories
+        run: |
+          opam repo add rocq-released https://rocq-prover.org/opam/released || true
+          opam repo add rocq-core-dev https://rocq-prover.org/opam/core-dev || true
+          opam repo add rocq-extra-dev https://rocq-prover.org/opam/extra-dev || true
+          opam update
+
+      - name: Install Rocq 9.3 and MetaRocq dependencies
+        run: |
+          opam install -y \
+            rocq-core.9.3.0 \
+            rocq-stdlib.dev \
+            rocq-equations.1.3.2+9.3 \
+            coq-ext-lib.dev
+          eval "$(opam env)"
+          rocq --version
+
+      - name: Build MetaRocq Template
+        run: |
+          eval "$(opam env)"
+          ./scripts/install-metarocq.sh
+          rocq --version
+
+      - name: Run integration tests
+        run: |
+          eval "$(opam env)"
+          python -m unittest discover -s tests -v
+
+      - name: Run end-to-end self-test
+        run: |
+          eval "$(opam env)"
+          python selftest.py

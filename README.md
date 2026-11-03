@@ -165,6 +165,19 @@ Mean reduction:
 All sixteen slices compile with `rocq compile -q`.  This is a sanity corpus,
 not a benchmark.
 
+## CI
+
+GitHub Actions runs two jobs:
+
+- **Python unit tests** on Python 3.12, with no Rocq dependency;
+- **Rocq 9.3 + MetaRocq integration**, which sets up OCaml 5.4.1/opam,
+  installs Rocq 9.3 and the MetaRocq `9.3` branch, builds
+  `rocq-metarocq-template`, and runs the integration tests plus `selftest.py`.
+
+The workflow is [`.github/workflows/ci.yml`](.github/workflows/ci.yml).  The
+integration job has a 90-minute timeout because Rocq and MetaRocq are built
+from source.
+
 ## Tests
 
 ```bash
@@ -197,6 +210,7 @@ are skipped or fail with an installation hint.
 
 ```text
 rocq-gallina-slicer/
+├── .github/workflows/ci.yml
 ├── gallina_slicer/
 │   ├── slicer.py        # Gallina subset parser + rendering + rocq check
 │   ├── meta_trace.py    # MetaRocq driver and trace parser
